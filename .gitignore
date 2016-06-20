@@ -1,4 +1,7 @@
+.DS_Store
 *.pyc
 *.egg-info
 *.swp
+tags
+table_booking/docs/current
 sftp-config.json
