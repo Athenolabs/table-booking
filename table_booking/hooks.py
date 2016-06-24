@@ -111,3 +111,4 @@ app_license = "MIT"
 # 	"frappe.desk.doctype.event.event.get_events": "table_booking.event.get_events"
 # }
 
+calendars = ["Table Booking"]
