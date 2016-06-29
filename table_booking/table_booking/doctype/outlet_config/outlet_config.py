@@ -6,4 +6,9 @@ import frappe
 
 
 class OutletConfig(Document):
-	pass
+	def validate(self):
+		for tc in self.tables:
+			tc.validate()
+
+		for tbd in self.table_booking_days:
+			tbd.validate()
