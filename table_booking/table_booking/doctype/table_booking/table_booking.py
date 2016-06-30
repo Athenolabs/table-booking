@@ -22,12 +22,17 @@ class TableBooking(Document):
 
 		if self.booked_table:
 			self.booked_table_name = frappe.db.get_value("Table Config", self.booked_table, "table_name")
+			self.preferred_area = frappe.db.get_value("Table Config", self.booked_table, "preferred_area")
 
 	def approve(self):
 		frappe.db.set_value("Table Booking", self.name, "booked_table", self.booked_table)
 		if self.booked_table:
 			booked_table_name = frappe.db.get_value("Table Config", self.booked_table, "table_name")
 			frappe.db.set_value("Table Booking", self.name, "booked_table_name", booked_table_name)
+
+			preferred_area = frappe.db.get_value("Table Config", self.booked_table, "preferred_area")
+			frappe.db.set_value("Table Booking", self.name, "preferred_area", preferred_area)
+
 		frappe.db.set_value("Table Booking", self.name, "status", "Approved")
 		frappe.clear_cache(doctype='Table Booking')
 		return frappe.db.get("Table Config", self.booked_table)
@@ -50,7 +55,12 @@ def get_vacant_table(table_booking):
 	tb_doc = frappe.get_doc("Table Booking", table_booking)
 	start_time = get_time(cstr(tb_doc.reservation_start_time))
 	end_time = get_time(cstr(tb_doc.reservation_end_time))
-	tables = frappe.db.sql("""select name, table_name, capacity
+	if tb_doc.preferred_area:
+		tables = frappe.db.sql("""select name, table_name, capacity
+			from `tabTable Config` where parent=%s and capacity >= %s and preferred_area=%s
+			order by capacity asc""", (tb_doc.outlet, tb_doc.no_of_people, tb_doc.preferred_area), as_dict=1)
+	else:
+		tables = frappe.db.sql("""select name, table_name, capacity
 		from `tabTable Config` where parent=%s and capacity >= %s
 		order by capacity asc""", (tb_doc.outlet, tb_doc.no_of_people), as_dict=1)
 	if frappe.db.get_all("Table Booking Days", filters={"day_off": 1, "date": tb_doc.booking_date, "parent": tb_doc.outlet}):
@@ -149,9 +159,9 @@ def vacant_time_slots():
 		response_data["booking_date"] = data.booking_date
 		# start_time = get_time(cstr(data.reservation_start_time))
 		# end_time = get_time(cstr(data.reservation_end_time))
-		tables = frappe.db.sql("""select name, table_name, capacity
-			from `tabTable Config` where parent=%s and capacity >= %s and preferred_area=%s
-			order by capacity asc""", (data.outlet, data.no_of_people, data.preferred_area), as_dict=1)
+		tables = frappe.db.sql("""select name, table_name, capacity, preferred_area
+			from `tabTable Config` where parent=%s and capacity >= %s
+			order by capacity asc""", (data.outlet, data.no_of_people), as_dict=1)
 
 		if frappe.db.get_all("Table Booking Days", filters={"day_off": 1, "date": data.booking_date, "parent": data.outlet}):
 			# return error_response("This Table Booking cannot be approved since there is day off on {}".format(cstr(data.booking_date)))
@@ -197,6 +207,7 @@ def vacant_time_slots():
 				"name": t.name,
 				"table_name": t.table_name,
 				"capacity": t.capacity,
+				"preferred_area": t.preferred_area,
 				"vacant_time_slots": vacant_time_slots
 			}
 			tables_data.append(table_data)
