@@ -105,13 +105,15 @@ def get_events(start, end, filters=None):
 
 	from frappe.desk.calendar import get_event_conditions
 	conditions = get_event_conditions("Table Booking", filters)
-	data = frappe.db.sql("""select name, customer_name, booking_date, status
+	data = frappe.db.sql("""select name, customer_name, booking_date, status, booked_table
 		from `tabTable Booking`
 		where (ifnull(booking_date, '0000-00-00')!= '0000-00-00')
 				and (booking_date between %(start)s and %(end)s)
 				and docstatus <= 2
 				{conditions}
 		""".format(conditions=conditions), {"start": start, "end": end}, as_dict=True)
+	if table:
+		data = [d for d in data if d.booked_table == table]
 	return data
 
 
