@@ -26,8 +26,5 @@ class TableConfig(Document):
 		self.start_time = cstr(start_time)
 		self.end_time = cstr(end_time)
 
-		if self.day_off and not self.day_off_date:
-			frappe.throw("Day Off Date should be specified if Day Off checkbox is enabled")
-
-		if not self.day_off and not self.days_of_week:
+		if not self.days_of_week:
 			frappe.throw("Days Of Week should be specified")

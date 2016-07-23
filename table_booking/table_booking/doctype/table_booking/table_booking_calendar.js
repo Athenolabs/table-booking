@@ -24,8 +24,8 @@ frappe.views.calendar["Table Booking"] = {
 	get_events_method: "table_booking.table_booking.doctype.table_booking.table_booking.get_events",
 	get_css_class: function(data) {
 		if(data.status=="Draft") {
-			return "warning";
-		} else if(data.status=="Submitted") {
+			return "primary";
+		} else if(data.status=="Awaiting Approval") {
 			return "primary";
 		} else if(data.status=="Not Approved") {
 			return "danger";
